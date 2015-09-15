@@ -37,8 +37,8 @@ Racer.prototype.create = function(){
     this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
   var player = this.player.el;
 
-  // Player emitter
-  this.addEmitter(this.player, this.player.data.color);
+  // Player trail
+  this.addTrail(this.player.el, this.player.data.color);
 
   this.physics.arcade.enable(player);
   player.enableBody = true;
@@ -58,44 +58,69 @@ Racer.prototype.update = function(){
 };
 
 Racer.prototype.playerUpdate = function(){
+  var _this = this;
   var player = this.player.el;
 
+  // Player's elements collisions
+  this.physics.arcade.collide(this.obstacles, player, function(){
+    _this.destroyPlayer(_this.player.el, _this.player.data.color);
+  });
+  if(player.explosion)
+    this.physics.arcade.collide(this.obstacles, player.explosion);
+  if(player.trail)
+    this.physics.arcade.collide(this.obstacles, player.trail);
+
+  // Player reset position
   player.body.velocity.x = 0;
   player.body.velocity.y = 0;
-  this.player.emitter.x = player.position.x;
-  this.player.emitter.y = player.position.y + player.height / 2;
+  player.trail.x = player.position.x;
+  player.trail.y = player.position.y + player.height / 2;
 
+  // Player update position
   this.player.data.updatePosition(player.position);
 
+  // Player direction handler
   if(this.cursors.up.isDown){
-    player.body.velocity.y = -500;
+    player.body.velocity.y = -400;
     player.refresh = true;
   }
   if(this.cursors.down.isDown){
-    player.body.velocity.y = 500;
+    player.body.velocity.y = 400;
     player.refresh = true;
   }
   if(this.cursors.left.isDown){
     player.refresh = true;
-    player.body.velocity.x = -500
+    player.body.velocity.x = -400
   }
   if(this.cursors.right.isDown){
     player.refresh = true;
-    player.body.velocity.x = 500;
+    player.body.velocity.x = 400;
   }
 };
 
 Racer.prototype.foesUpdate = function(){
+  var _this = this;
+  // Update foes position
   for(var i = 0; i < this.foes.children.length; i++){
-    this.foes.children[i].emitter.x = this.foes.children[i].position.x;
-    this.foes.children[i].emitter.y = this.foes.children[i].position.y + this.foes.children[i].height / 2;
+    var foe = this.foes.children[i];
+    foe.trail.x = foe.position.x;
+    foe.trail.y = foe.position.y + foe.height / 2;
+    // Foes collisions
+    this.physics.arcade.collide(this.obstacles, foe, function(){
+      _this.destroyPlayer(foe, foe.color);
+    });
+    if(foe.explosion)
+      this.physics.arcade.collide(this.obstacles, foe.explosion);
+    if(foe.trail)
+      this.physics.arcade.collide(this.obstacles, foe.trail);
   }
 };
 
 Racer.prototype.createFoe = function(color, id, pos){
   var foe = this.foes.create(0, 0, this.playerCreator(this.player.data.size, color));
-  this.addEmitter(foe, color);
+  this.addTrail(foe, color);
   foe.name = id;
+  foe.color = color;
   if(!pos){
     foe.position.x = 0;
     foe.position.y = 0;
@@ -109,8 +134,8 @@ Racer.prototype.createFoe = function(color, id, pos){
 Racer.prototype.updateFoe = function(pos, id){
   for(var i = 0; i < this.foes.children.length; i++){
     if(this.foes.children[i].name == id){
-      this.foes.children[i].position.x = pos.x;
-      this.foes.children[i].position.y = pos.y;
+      this.foes.children[i].x = pos.x;
+      this.foes.children[i].y = pos.y;
     }
   }
 };
@@ -118,8 +143,8 @@ Racer.prototype.updateFoe = function(pos, id){
 Racer.prototype.destroyFoe = function(id){
   for(var i = 0; i < this.foes.children.length; i++){
     if(this.foes.children[i].name == id){
+      this.foes.children[i].trail.kill();
       this.foes.children[i].kill();
-      this.foes.children[i].emitter.kill();
     }
   }
 };
@@ -134,27 +159,60 @@ Racer.prototype.playerCreator = function(size, color){
   return player;
 };
 
-Racer.prototype.addEmitter = function(parent, color){
+Racer.prototype.destroyPlayer = function(player, color){
+  this.createExplosion(player, color);
+  player.kill();
+  player.trail.kill();
+};
+
+Racer.prototype.createExplosion = function(player, color){
+  var particle = this.add.bitmapData(10, 10);
+  particle.ctx.beginPath();
+  particle.ctx.moveTo(0, 0);
+  particle.ctx.lineTo(10, 0);
+  particle.ctx.lineTo(5, 10);
+  particle.ctx.closePath();
+  particle.ctx.fillStyle = color;
+  particle.ctx.fill();
+
+  player.explosion = this.add.emitter(0, 0);
+  player.explosion.makeParticles(particle);
+  player.maxParticles = 500;
+  player.explosion.gravity = 0;
+  player.explosion.height = player.height;
+  player.explosion.width = player.width;
+  player.explosion.x = player.x + player.height / 2;
+  player.explosion.y = player.y + player.width / 2;
+  player.explosion.setAlpha(1, 0, 2000);
+  player.explosion.setScale(1, 0.2, 1, 0.3, 2000);
+  player.explosion.setXSpeed(-200, 200);
+  player.explosion.setYSpeed(-200, 200);
+  player.explosion.bounce.setTo(1, 1);
+  player.explosion.flow(2000, 1, 500, 1);
+};
+
+Racer.prototype.addTrail = function(parent, color){
   var particle = this.add.bitmapData(8, 8);
   particle.ctx.arc(4, 4, 4, 0, 2 * Math.PI);
   particle.ctx.fillStyle = color;
   particle.ctx.fill();
 
-  parent.emitter = this.add.emitter(0, 0);
-  parent.emitter.makeParticles(particle);
-  parent.emitter.gravity = 0;
+  parent.trail = this.add.emitter(0, 0);
+  parent.trail.makeParticles(particle);
+  parent.trail.gravity = 0;
   parent.maxParticles = 300;
-  parent.emitter.height = 0; //parent.el.height / 2;
-  parent.emitter.minParticleSpeed.x = -0;
-  parent.emitter.maxParticleSpeed.x = -500;
-  parent.emitter.minParticleSpeed.y = 0;
-  parent.emitter.maxParticleSpeed.y = 0;
-  parent.emitter.setAlpha(1, 0, 700);
-  parent.emitter.setScale(1, 0.9, 1, 0.6, 700);
-  parent.emitter.start(false, 700, 1);
+  parent.trail.height = 0;
+  parent.trail.minParticleSpeed.x = -0;
+  parent.trail.maxParticleSpeed.x = -500;
+  parent.trail.minParticleSpeed.y = 0;
+  parent.trail.maxParticleSpeed.y = 0;
+  parent.trail.setAlpha(1, 0, 700);
+  parent.trail.setScale(1, 0.9, 1, 0.6, 700);
+  parent.trail.start(false, 700, 1);
 };
 
 Racer.prototype.createObstacle = function(model){
+  var obstacleVelocity = 200;
   switch(model.type){
     case 0 :
       var size = this.game.height * model.size / 100;
@@ -164,7 +222,7 @@ Racer.prototype.createObstacle = function(model){
         this.obstacleCreator(size)); // ObstacleBitmapCreator
 
       obstacle.body.immovable = true;
-      obstacle.body.velocity.x = -250;
+      obstacle.body.velocity.x = -obstacleVelocity;
     break;
     case 1 :
       var size = this.game.height * 80 / 100;
@@ -175,7 +233,7 @@ Racer.prototype.createObstacle = function(model){
         this.obstacleCreator(size)); // ObstacleBitmapCreator
 
       obstacle.body.immovable = true;
-      obstacle.body.velocity.x = -250;
+      obstacle.body.velocity.x = -obstacleVelocity;
     break;
     case 2 :
       var topSize = this.game.height * model.position / 100;
@@ -185,7 +243,7 @@ Racer.prototype.createObstacle = function(model){
         this.obstacleCreator(topSize)); // ObstacleBitmapCreator
 
       topObstacle.body.immovable = true;
-      topObstacle.body.velocity.x = -250;
+      topObstacle.body.velocity.x = -obstacleVelocity;
 
       var botSize = this.game.height * (100 - model.position - 15) / 100;
       var obstacleTop = topSize + (this.game.height * 15 / 100);
@@ -195,7 +253,7 @@ Racer.prototype.createObstacle = function(model){
         this.obstacleCreator(botSize)); // ObstacleBitmapCreator
 
       botObstacle.body.immovable = true;
-      botObstacle.body.velocity.x = -250;
+      botObstacle.body.velocity.x = -obstacleVelocity;
     break;
     case 3 :
       var size = this.game.height * model.size / 100;
@@ -206,7 +264,7 @@ Racer.prototype.createObstacle = function(model){
         this.obstacleCreator(size)); // ObstacleBitmapCreator
 
       obstacle.body.immovable = true;
-      obstacle.body.velocity.x = -250;
+      obstacle.body.velocity.x = -obstacleVelocity;
     break;
   };
 };

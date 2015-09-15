@@ -17,6 +17,10 @@ Player.prototype.updatePosition = function(position){
   this.socket.emit('setPos', position);
 };
 
+Player.prototype.destroyed = function(){
+  this.socket.emit('destroyed');
+};
+
 Player.prototype.socketHandler = function(){
   var _this = this;
 
