@@ -3,9 +3,10 @@ function Racer(game){
 
 Racer.prototype.init = function(player){
   this.player = {
-    data: player,
+    data: player, // refers to player created with new Player()
     el: null,
   };
+  // Link the Racer object with the Player
   this.player.data.link(this);
 };
 
@@ -117,14 +118,20 @@ Racer.prototype.foesUpdate = function(){
 };
 
 Racer.prototype.createFoe = function(color, id, pos){
+  // Create foe
   var foe = this.foes.create(0, 0, this.playerCreator(this.player.data.size, color));
+  // Add trail to foe
   this.addTrail(foe, color);
+  // Add name
   foe.name = id;
+  // Add color
   foe.color = color;
+  // Set pos to 0,0 if foe just arrive
   if(!pos){
     foe.position.x = 0;
     foe.position.y = 0;
   }
+  // Set foe pos if foe was already in game when player arrive
   else{
     foe.position.x = pos.x;
     foe.position.y = pos.y;
@@ -132,6 +139,7 @@ Racer.prototype.createFoe = function(color, id, pos){
 };
 
 Racer.prototype.updateFoe = function(pos, id){
+  // Update foe's position when he's moving
   for(var i = 0; i < this.foes.children.length; i++){
     if(this.foes.children[i].name == id){
       this.foes.children[i].x = pos.x;
@@ -141,15 +149,16 @@ Racer.prototype.updateFoe = function(pos, id){
 };
 
 Racer.prototype.destroyFoe = function(id){
+  // Destroy foe on disconnect
   for(var i = 0; i < this.foes.children.length; i++){
     if(this.foes.children[i].name == id){
-      this.foes.children[i].trail.kill();
-      this.foes.children[i].kill();
+      this.destroyPlayer(this.foes.children[i], this.foes.children[i].color);
     }
   }
 };
 
 Racer.prototype.playerCreator = function(size, color){
+  // Bitmap allowing to create a player
   var player = this.add.bitmapData(size.width, size.height);
   player.ctx.beginPath();
   player.ctx.rect(0, 0, size.width, size.height);
@@ -160,21 +169,26 @@ Racer.prototype.playerCreator = function(size, color){
 };
 
 Racer.prototype.destroyPlayer = function(player, color){
+  // Player kill + destruction animation
   this.createExplosion(player, color);
   player.kill();
   player.trail.kill();
 };
 
 Racer.prototype.createExplosion = function(player, color){
+  // Destruction particle
   var particle = this.add.bitmapData(10, 10);
+  // Particle schema
   particle.ctx.beginPath();
   particle.ctx.moveTo(0, 0);
   particle.ctx.lineTo(10, 0);
   particle.ctx.lineTo(5, 10);
   particle.ctx.closePath();
+  // End particle schema
   particle.ctx.fillStyle = color;
   particle.ctx.fill();
 
+  // Destruction emitter
   player.explosion = this.add.emitter(0, 0);
   player.explosion.makeParticles(particle);
   player.maxParticles = 500;
@@ -192,11 +206,15 @@ Racer.prototype.createExplosion = function(player, color){
 };
 
 Racer.prototype.addTrail = function(parent, color){
+  // Trail particle
   var particle = this.add.bitmapData(8, 8);
+  // Particle schema
   particle.ctx.arc(4, 4, 4, 0, 2 * Math.PI);
+  // End particle schema
   particle.ctx.fillStyle = color;
   particle.ctx.fill();
 
+  // Trail emitter
   parent.trail = this.add.emitter(0, 0);
   parent.trail.makeParticles(particle);
   parent.trail.gravity = 0;
@@ -212,6 +230,7 @@ Racer.prototype.addTrail = function(parent, color){
 };
 
 Racer.prototype.createObstacle = function(model){
+  // Obstacle switcher allowing to create obstacle depending on model
   var obstacleVelocity = 200;
   switch(model.type){
     case 0 :
@@ -270,6 +289,7 @@ Racer.prototype.createObstacle = function(model){
 };
 
 Racer.prototype.obstacleCreator = function(height){
+  // Bitmap allowing to create an obstacle
   var width = this.player.data.size.width;
   var obstacle = this.add.bitmapData(width, height);
   obstacle.ctx.beginPath();
