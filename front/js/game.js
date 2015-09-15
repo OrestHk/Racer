@@ -5,6 +5,9 @@ $(document).ready(function(){
 });
 
 function initGame(){
+  // "I want to play" told the user to the serv
+  socket.emit('requireGame');
+
   // Socket handshake with server
   socket.on('handshake', function(data){
     // Player creation
