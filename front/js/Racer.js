@@ -68,8 +68,8 @@ Racer.prototype.playerUpdate = function(){
   });
   if(player.explosion)
     this.physics.arcade.collide(this.obstacles, player.explosion);
-  if(player.trail)
-    this.physics.arcade.collide(this.obstacles, player.trail);
+  // if(player.trail)
+  //   this.physics.arcade.collide(this.obstacles, player.trail);
 
   // Player reset position
   player.body.velocity.x = 0;
@@ -112,8 +112,8 @@ Racer.prototype.foesUpdate = function(){
     });
     if(foe.explosion)
       this.physics.arcade.collide(this.obstacles, foe.explosion);
-    if(foe.trail)
-      this.physics.arcade.collide(this.obstacles, foe.trail);
+    // if(foe.trail)
+    //   this.physics.arcade.collide(this.obstacles, foe.trail);
   }
 };
 
@@ -170,9 +170,11 @@ Racer.prototype.playerCreator = function(size, color){
 
 Racer.prototype.destroyPlayer = function(player, color){
   // Player kill + destruction animation
-  this.createExplosion(player, color);
-  player.kill();
-  player.trail.kill();
+  if(player.alive){
+    this.createExplosion(player, color);
+    player.kill();
+    player.trail.kill();
+  }
 };
 
 Racer.prototype.createExplosion = function(player, color){
@@ -191,7 +193,7 @@ Racer.prototype.createExplosion = function(player, color){
   // Destruction emitter
   player.explosion = this.add.emitter(0, 0);
   player.explosion.makeParticles(particle);
-  player.maxParticles = 500;
+  player.maxParticles = 200;
   player.explosion.gravity = 0;
   player.explosion.height = player.height;
   player.explosion.width = player.width;
@@ -202,7 +204,7 @@ Racer.prototype.createExplosion = function(player, color){
   player.explosion.setXSpeed(-200, 200);
   player.explosion.setYSpeed(-200, 200);
   player.explosion.bounce.setTo(1, 1);
-  player.explosion.flow(2000, 1, 500, 1);
+  player.explosion.flow(2000, 1, 200, 1, true);
 };
 
 Racer.prototype.addTrail = function(parent, color){
