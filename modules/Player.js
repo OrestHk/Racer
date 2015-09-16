@@ -1,10 +1,11 @@
 module.exports = Player;
 
-function Player(socket, room, game){
+function Player(socket, room, game, roomObj){
   this.room = room;
   this.game = game;
   this.socket = socket;
   this.name = socket.id;
+  this.roomObj = roomObj;
   this.players = game.players;
   this.color = this.setColor();
   this.position = {
@@ -43,6 +44,7 @@ Player.prototype.socketHandler = function(){
   this.socket.on('disconnect', function(){
     _this.socket.broadcast.to(_this.room).emit('destroy', _this.name);
     _this.game.deletePlayer(_this.name);
+    _this.roomObj.refresh();
   });
 };
 

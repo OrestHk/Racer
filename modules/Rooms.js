@@ -23,19 +23,21 @@ function Rooms(router, ws){
 
 /* Room request handler */
 Rooms.prototype.request = function(socket, name){
+  // If the wanted room need to be created, create it
   if(this.creating(name))
     this.create(socket, name);
-  else
+  else // Join the wanted room
     this.join(socket, name);
 };
 /* End room request handler */
 
-/* Random room */
+/* Join a random room */
 Rooms.prototype.random = function(socket){
   var i = 0;
   var nbRoom = this.rooms.length - 1;
-  var choices = [];
+  var choices = []; // List of available rooms (no full, no being created)
 
+  // List all the available rooms
   do{
     if(!this.creating(this.rooms[i]))
       if(!this.full(this.rooms[i]))
@@ -44,33 +46,43 @@ Rooms.prototype.random = function(socket){
   } while(i < nbRoom);
 
   var nbChoices = choices.length - 1;
+  // If no room
   if(nbChoices < 0)
     this.creation(socket);
   else{
+    // Join a random room
     var random = this.rooms[this.rand(0, nbChoices)];
     socket.emit('join', random);
   }
 };
-/* End random room */
+/* End join a random room */
 
 /* Join room */
 Rooms.prototype.join = function(socket, name){
+  // Join the room
   socket.join(name);
-  this.games[name].addPlayer(new Player(socket, name, this.games[name]));
+  // Add the new player to the game
+  this.games[name].addPlayer(new Player(socket, name, this.games[name], this));
 };
 /* End join room */
 
 /* Room creation */
 Rooms.prototype.creation = function(socket){
+  // Generate name
   var name = this.getName();
+  // Add the room to the roomList
   this.rooms.push(name);
+  // Switch socket to the room
   socket.emit('join', name);
 };
 
 Rooms.prototype.create = function(socket, name){
+  // Join the room
   socket.join(name);
+  // Create a new game in the room
   this.games[name] = new Game(this.ws, name);
-  this.games[name].addPlayer(new Player(socket, name, this.games[name]));
+  // Add the new player to the game
+  this.games[name].addPlayer(new Player(socket, name, this.games[name], this));
 };
 
 Rooms.prototype.getName = function(){
@@ -81,6 +93,7 @@ Rooms.prototype.getName = function(){
     name += chars.charAt(Math.floor(Math.random() * chars.length));
   }
 
+  // Case if room already exist
   if(this.sRooms.hasOwnProperty(name)){
     this.getName();
     return false;
@@ -92,6 +105,7 @@ Rooms.prototype.getName = function(){
 
 /* Room status */
 Rooms.prototype.creating = function(name){
+  // Check if the room is being created
   if(this.games[name])
     return false;
   else
@@ -99,6 +113,7 @@ Rooms.prototype.creating = function(name){
 };
 
 Rooms.prototype.exist = function(name){
+  // Check if the room exist in the list
   if(this.rooms.indexOf(name) != -1)
     return true;
   else
@@ -106,6 +121,7 @@ Rooms.prototype.exist = function(name){
 };
 
 Rooms.prototype.full = function(name){
+  // Check if the room is full
   var room = this.sRooms[name];
   var count = 0, player;
 
@@ -121,6 +137,25 @@ Rooms.prototype.full = function(name){
 };
 /* End room status */
 
+/* Refresh room list */
+Rooms.prototype.refresh = function(){
+  var nbRoom = this.rooms.length - 1;
+  var i = 0;
+  do{
+    if(!this.sRooms[this.rooms[i]]){ // If room !exist in socket.io object
+      if(!this.creating(this.rooms[i])){ // If room !is being created
+        // Delete the room
+        delete this.games[this.rooms[i]];
+        this.rooms.splice(i, 1);
+        nbRoom--;
+      }
+    }
+    i++;
+  } while(i < nbRoom);
+};
+/* End refresh room list */
+
+/* Route handler */
 Rooms.prototype.handleRoute = function(){
   var _this = this;
   this.router.get('/', function(req, res){
@@ -145,6 +180,7 @@ Rooms.prototype.handleRoute = function(){
     res.sendFile(path.join(__dirname, '../front/404.html'));
   });
 };
+/* End route handler */
 
 Rooms.prototype.rand = function(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
