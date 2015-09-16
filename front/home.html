@@ -3,16 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Racer</title>
-  <style>
-    body{margin: 0px;}
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="home">
 
-
+  <div class="choices">
+    <button class="create">Create a game</button>
+    <button class="join">Join a game</button>
+    <div class="clear"></div>
+    <form>
+      <input type="text" placeholder="Game ID">
+      <button class="find">Find this game</button>
+      <div class="clear"></div>
+    </form>
+  </div>
 
   <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/libs/jquery.min.js"></script>
+  <script type="text/javascript" src="js/socket.js"></script>
   <script type="text/javascript" src="js/home.js"></script>
 
 </body>

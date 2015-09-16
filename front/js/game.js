@@ -1,12 +1,12 @@
-var socket, player, game;
+var player, game;
 $(document).ready(function(){
-  socket = io.connect('http://localhost:145/');
   initGame();
 });
 
 function initGame(){
   // "I want to play" told the user to the serv
-  socket.emit('requireGame');
+  var room = window.location.href.split('/game/')[1];
+  socket.emit('requireGame', room);
 
   // Socket handshake with server
   socket.on('handshake', function(data){

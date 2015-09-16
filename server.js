@@ -7,29 +7,17 @@ var io        = require('socket.io');
 var xpress    = require('express');
 var Player    = require('./modules/Player.js');
 var Game      = require('./modules/Game.js');
+var Rooms     = require('./modules/Rooms.js');
 
 // SERVER SETTINGS
-var app       = xpress();
-var serv      = http.createServer(app);
-var ws        = io(serv);
-var router    = express.Router();
-app.set('port', process.env.PORT || 145);
-app.use(xpress.static(path.join(__dirname, 'front/')));
+var app         = xpress();
+var serv        = http.createServer(app);
+var ws          = io(serv);
+var router      = xpress.Router();
+var roomHandler = new Rooms(router, ws);
 
-// Route handler
-router.get('/', function(req, res){
-  res.sendFile(path.join(__dirname, 'front/home.html'));
-});
-router.get("/game/:game",function(req,res){
-  if(rooms.indexOf(req.params.game) != -1)
-    res.sendFile(path.join(__dirname, 'front/index.html'));
-  else
-    res.sendFile(path.join(__dirname, 'front/404.html'));
-});
-router.get("*",function(req,res){
-  res.sendFile(path.join(__dirname, 'front/404.html'));
-});
-app.use(express.static(path.join(__dirname, 'front/')), router);
+app.set('port', process.env.PORT || 145);
+app.use(xpress.static(path.join(__dirname, 'front/')), router);
 
 // GAME VARS
 var racer = new Game(ws);
