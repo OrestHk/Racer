@@ -19,34 +19,29 @@ var roomHandler = new Rooms(router, ws);
 app.set('port', process.env.PORT || 145);
 app.use(xpress.static(path.join(__dirname, 'front/')), router);
 
-// GAME VARS
-// var racer = new Game(ws);
-
 // SOCKET HANDLER
 ws.on('connection', function(socket){
 
-  // Room request handler
+  /* Room request handler */
   socket.on('createGame', function(){
+    // Create a game (and a room)
     roomHandler.creation(socket);
   });
-  // socket.on('joinGame', function(){
-  //   roomHandler.creationRequest(socket);
-  // });
-  // socket.on('findGame', function(name){
-  //   roomHandler.creationRequest(socket);
-  // });
+  socket.on('joinGame', function(){
+    // Join a random game
+    roomHandler.random(socket);
+  });
+  socket.on('findGame', function(name){
+    // Find a game by name
+    socket.emit('join', name);
+  });
+  /* End room request handler */
 
-  // If user is in a room
+  // User wants to play in particular room
   socket.on('requireGame', function(name){
-    roomHandler.request(socket, name, true);
-    //racer.addPlayer(new Player(socket, ws, racer));
+    roomHandler.request(socket, name);
   });
-
-  socket.on('disconnect', function(){
-    console.log('Socket : '+socket.id+' left');
-    // socket.broadcast.emit('destroy', socket.id);
-    // racer.deletePlayer(socket.id);
-  });
+  
 });
 
 // SERVER LISTENER

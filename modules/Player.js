@@ -39,9 +39,10 @@ Player.prototype.socketHandler = function(){
     _this.socket.broadcast.to(_this.room).emit('givePos', {'pos': pos, 'id': _this.name});
   });
 
-  // FOR DEBUG
-  this.socket.on('request', function(){
-    _this.game.sendObstacle();
+  // Player disconnection
+  this.socket.on('disconnect', function(){
+    _this.socket.broadcast.to(_this.room).emit('destroy', _this.name);
+    _this.game.deletePlayer(_this.name);
   });
 };
 

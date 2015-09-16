@@ -6,7 +6,7 @@ function Game(ws, room){
   this.room = room;
   this.players = {};
   this.obstacle = setTimeout(function(){
-    //_this.sendObstacle();
+    _this.sendObstacle();
   }, 10);
 }
 

@@ -23,14 +23,35 @@ function Rooms(router, ws){
 
 /* Room request handler */
 Rooms.prototype.request = function(socket, name){
-  if(this.exist(name)){
-    if(this.creating(name))
-      this.create(socket, name);
-    else
-      this.join(socket, name);
-  }
+  if(this.creating(name))
+    this.create(socket, name);
+  else
+    this.join(socket, name);
 };
 /* End room request handler */
+
+/* Random room */
+Rooms.prototype.random = function(socket){
+  var i = 0;
+  var nbRoom = this.rooms.length - 1;
+  var choices = [];
+
+  do{
+    if(!this.creating(this.rooms[i]))
+      if(!this.full(this.rooms[i]))
+        choices.push(this.rooms[i]);
+    i++;
+  } while(i < nbRoom);
+
+  var nbChoices = choices.length - 1;
+  if(nbChoices < 0)
+    this.creation(socket);
+  else{
+    var random = this.rooms[this.rand(0, nbChoices)];
+    socket.emit('join', random);
+  }
+};
+/* End random room */
 
 /* Join room */
 Rooms.prototype.join = function(socket, name){
@@ -123,4 +144,8 @@ Rooms.prototype.handleRoute = function(){
   this.router.get("*",function(req, res){
     res.sendFile(path.join(__dirname, '../front/404.html'));
   });
+};
+
+Rooms.prototype.rand = function(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
