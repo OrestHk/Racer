@@ -1,4 +1,6 @@
-var path = require('path');
+var path      = require('path');
+var Player    = require(__root + 'modules/Player.js');
+var Game      = require(__root + 'modules/Game.js');
 
 module.exports = Rooms;
 
@@ -19,12 +21,43 @@ function Rooms(router, ws){
   this.handleRoute();
 }
 
+/* Room request handler */
+Rooms.prototype.request = function(socket, name){
+  if(this.exist(name)){
+    if(this.creating(name))
+      this.create(socket, name);
+    else
+      this.join(socket, name);
+  }
+};
+/* End room request handler */
+
+/* Join room */
+Rooms.prototype.join = function(socket, name){
+  socket.join(name);
+  this.games[name].addPlayer(new Player(socket, name, this.games[name]));
+};
+/* End join room */
+
+/* Room creation */
+Rooms.prototype.creation = function(socket){
+  var name = this.getName();
+  this.rooms.push(name);
+  socket.emit('join', name);
+};
+
+Rooms.prototype.create = function(socket, name){
+  socket.join(name);
+  this.games[name] = new Game(this.ws, name);
+  this.games[name].addPlayer(new Player(socket, name, this.games[name]));
+};
+
 Rooms.prototype.getName = function(){
   var name = '';
   var length = 8;
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   for(var i = 0; i < length; i++){
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
+    name += chars.charAt(Math.floor(Math.random() * chars.length));
   }
 
   if(this.sRooms.hasOwnProperty(name)){
@@ -34,10 +67,18 @@ Rooms.prototype.getName = function(){
 
   return name;
 };
+/* End room creation */
 
 /* Room status */
+Rooms.prototype.creating = function(name){
+  if(this.games[name])
+    return false;
+  else
+    return true;
+};
+
 Rooms.prototype.exist = function(name){
-  if(this.rooms.indexOf(room))
+  if(this.rooms.indexOf(name) != -1)
     return true;
   else
     return false;
@@ -53,9 +94,9 @@ Rooms.prototype.full = function(name){
   }
 
   if(count < 4)
-    return true;
-  else
     return false;
+  else
+    return true;
 };
 /* End room status */
 
@@ -64,18 +105,22 @@ Rooms.prototype.handleRoute = function(){
   this.router.get('/', function(req, res){
     res.sendFile(path.join(__dirname, '../front/home.html'));
   });
-  this.router.get("/game/:game",function(req,res){
+  this.router.get("/game/:game",function(req, res){
     var name = req.params.game;
     if(_this.exist(name)){
-      if(!_this.full(name))
+      if(_this.creating(name))
         res.sendFile(path.join(__dirname, '../front/game.html'));
-      else
-        res.sendFile(path.join(__dirname, '../front/full.html'));
+      else{
+        if(!_this.full(name))
+          res.sendFile(path.join(__dirname, '../front/game.html'));
+        else
+          res.sendFile(path.join(__dirname, '../front/full.html'));
+      }
     }
     else
       res.sendFile(path.join(__dirname, '../front/404.html'));
   });
-  this.router.get("*",function(req,res){
+  this.router.get("*",function(req, res){
     res.sendFile(path.join(__dirname, '../front/404.html'));
   });
 };

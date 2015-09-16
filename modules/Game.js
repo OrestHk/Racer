@@ -1,11 +1,12 @@
 module.exports = Game;
 
-function Game(ws){
+function Game(ws, room){
   var _this = this;
   this.ws = ws;
+  this.room = room;
   this.players = {};
   this.obstacle = setTimeout(function(){
-    _this.sendObstacle();
+    //_this.sendObstacle();
   }, 10);
 }
 
@@ -19,7 +20,7 @@ Game.prototype.deletePlayer = function(name){
 
 Game.prototype.sendObstacle = function(){
   var _this = this;
-  this.ws.emit('obstacle', this.createObstacle());
+  this.ws.to(this.room).emit('obstacle', this.createObstacle());
   this.obstacle = setTimeout(function(){
     _this.sendObstacle();
   }, 1500);

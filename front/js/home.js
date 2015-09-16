@@ -17,6 +17,8 @@ function bindControllers(){
     socket.emit('joinGame');
   });
   $(".find").click(function(){
-    socket.emit('findGame');
+    var name = $("#game_id").val();
+    if(name)
+      socket.emit('findGame', name);
   });
 }
