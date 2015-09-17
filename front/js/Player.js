@@ -1,5 +1,5 @@
-function Player(color, id, socket){
-  this.id = id;
+function Player(color, name, socket){
+  this.name = name;
   this.socket = socket;
   this.color = color;
   this.size = {
@@ -17,18 +17,22 @@ Player.prototype.updatePosition = function(position){
   this.socket.emit('setPos', position);
 };
 
+Player.prototype.destroy = function(name){
+  this.socket.emit('destroy', name);
+};
+
 Player.prototype.socketHandler = function(){
   var _this = this;
 
   // Foes handler
   this.socket.on('newPlayer', function(data){
-    _this.game.createFoe(data.color, data.id);
+    _this.game.createFoe(data.color, data.name);
   });
   this.socket.on('givePos', function(data){
-    _this.game.updateFoe(data.pos, data.id);
+    _this.game.updateFoe(data.pos, data.name);
   });
-  this.socket.on('destroy', function(id){
-    _this.game.destroyFoe(id);
+  this.socket.on('destroy', function(name){
+    _this.game.destroyFoe(name);
   });
 
   // Obstacles handler

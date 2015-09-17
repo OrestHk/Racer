@@ -5,14 +5,18 @@ function Game(ws, room){
   this.ws = ws;
   this.room = room;
   this.players = {};
-  this.start = false;
   this.countdownTimer;
+  this.stat = {
+    ready: false,
+    start: false,
+  };
 }
 
 /* Player handler */
 Game.prototype.addPlayer = function(player){
   this.players[player.name] = player;
-  this.ready();
+  if(!this.stat.ready)
+    this.ready();
 };
 
 Game.prototype.deletePlayer = function(name){
@@ -39,9 +43,13 @@ Game.prototype.ready = function(){
 Game.prototype.countdown = function(){
   var _this = this;
   var count = 5;
+
+  this.stat.ready = true;
+
   this.countdownTimer = setInterval(function(){
     if(count < 0){
       clearInterval(_this.countdownTimer);
+      _this.stat.start = true;
       _this.sendObstacle();
     }
     _this.ws.to(_this.room).emit('countdown', count);
