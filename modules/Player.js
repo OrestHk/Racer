@@ -42,9 +42,9 @@ Player.prototype.socketHandler = function(){
 
   // Player disconnection
   this.socket.on('disconnect', function(){
+    console.log('socket :'+_this.name+' left');
     _this.socket.broadcast.to(_this.room).emit('destroy', _this.name);
     _this.game.deletePlayer(_this.name);
-    _this.roomObj.refresh();
   });
 };
 

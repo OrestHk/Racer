@@ -23,11 +23,22 @@ function Rooms(router, ws){
 
 /* Room request handler */
 Rooms.prototype.request = function(socket, name){
-  // If the wanted room need to be created, create it
-  if(this.creating(name))
-    this.create(socket, name);
-  else // Join the wanted room
-    this.join(socket, name);
+  // Refresh room list
+  this.refresh();
+  if(this.exist(name)){
+    // If the wanted room need to be created, create it
+    if(this.creating(name))
+      this.create(socket, name);
+    else{
+      // If the room isn't full, join it
+      if(!this.full(name))
+        this.join(socket, name);
+      else
+        socket.emit('stat', 'full'); // Send full message
+    }
+  }
+  else
+    socket.emit('stat', '404'); // Send 404 message
 };
 /* End room request handler */
 
@@ -162,19 +173,7 @@ Rooms.prototype.handleRoute = function(){
     res.sendFile(path.join(__dirname, '../front/home.html'));
   });
   this.router.get("/game/:game",function(req, res){
-    var name = req.params.game;
-    if(_this.exist(name)){
-      if(_this.creating(name))
-        res.sendFile(path.join(__dirname, '../front/game.html'));
-      else{
-        if(!_this.full(name))
-          res.sendFile(path.join(__dirname, '../front/game.html'));
-        else
-          res.sendFile(path.join(__dirname, '../front/full.html'));
-      }
-    }
-    else
-      res.sendFile(path.join(__dirname, '../front/404.html'));
+    res.sendFile(path.join(__dirname, '../front/game.html'));
   });
   this.router.get("*",function(req, res){
     res.sendFile(path.join(__dirname, '../front/404.html'));

@@ -8,6 +8,18 @@ function initGame(){
   var room = window.location.href.split('/game/')[1];
   socket.emit('requireGame', room);
 
+  // Room stat handler
+  socket.on('stat', function(stat){
+    switch(stat){
+      case 'full' :
+        $("body").append('<p>Full</p>');
+      break;
+      case '404' :
+        $("body").append('<p>404</p>');
+      break;
+    };
+  });
+
   // Socket handshake with server
   socket.on('handshake', function(data){
     // Player creation
