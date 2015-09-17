@@ -5,19 +5,52 @@ function Game(ws, room){
   this.ws = ws;
   this.room = room;
   this.players = {};
-  this.obstacle = setTimeout(function(){
-    _this.sendObstacle();
-  }, 10);
+  this.start = false;
+  this.countdownTimer;
 }
 
+/* Player handler */
 Game.prototype.addPlayer = function(player){
   this.players[player.name] = player;
+  this.ready();
 };
 
 Game.prototype.deletePlayer = function(name){
   delete this.players[name];
 };
 
+Game.prototype.countPlayer = function(){
+  var count = 0, player;
+  for(player in this.players){
+    if(this.players.hasOwnProperty(player))
+      count++;
+  }
+
+  return count;
+};
+/* End player handler */
+
+/* Game launchers */
+Game.prototype.ready = function(){
+  var _this = this;
+  if(this.countPlayer() > 1)
+    this.countdown();
+};
+Game.prototype.countdown = function(){
+  var _this = this;
+  var count = 5;
+  this.countdownTimer = setInterval(function(){
+    if(count < 0){
+      clearInterval(_this.countdownTimer);
+      _this.sendObstacle();
+    }
+    _this.ws.to(_this.room).emit('countdown', count);
+    count--;
+  }, 1000);
+};
+/* End game launchers */
+
+/* Obstale handler */
 Game.prototype.sendObstacle = function(){
   var _this = this;
   this.ws.to(this.room).emit('obstacle', this.createObstacle());
@@ -53,6 +86,7 @@ Game.prototype.createObstacle = function(){
 
   return model;
 };
+/* End obstacle handler */
 
 Game.prototype.rand = function(min, max){
   return Math.floor(Math.random() * (max - min + 1)) + min;
