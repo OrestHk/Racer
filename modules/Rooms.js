@@ -44,6 +44,9 @@ Rooms.prototype.request = function(socket, name){
 
 /* Join a random room */
 Rooms.prototype.random = function(socket){
+  // Refresh room list
+  this.refresh();
+  
   var i = 0;
   var nbRoom = this.rooms.length - 1;
   var choices = []; // List of available rooms (no full, no being created)

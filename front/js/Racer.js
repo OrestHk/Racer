@@ -168,11 +168,9 @@ Racer.prototype.playerCreator = function(size, color){
 
 Racer.prototype.destroyPlayer = function(player, color){
   // Player kill + destruction animation
-  if(player.alive){
-    this.createExplosion(player, color);
-    player.kill();
-    player.trail.kill();
-  }
+  this.createExplosion(player, color);
+  player.kill();
+  player.trail.kill();
 };
 
 Racer.prototype.createExplosion = function(player, color){

@@ -2,11 +2,11 @@ module.exports = Game;
 
 function Game(ws, room){
   var _this = this;
-  this.ws = ws;
-  this.room = room;
-  this.players = {};
-  this.countdownTimer;
-  this.stat = {
+  this.ws = ws; // Socket.io object
+  this.room = room; // Room name
+  this.players = {}; // List of players
+  this.countdownTimer; // Countdown timeout
+  this.stat = { // Game stats
     ready: false,
     start: false,
   };
@@ -14,7 +14,9 @@ function Game(ws, room){
 
 /* Player handler */
 Game.prototype.addPlayer = function(player){
+  // Add player to the list of players
   this.players[player.name] = player;
+  // If countdown isn't launch, check for ready state
   if(!this.stat.ready)
     this.ready();
 };
@@ -37,15 +39,19 @@ Game.prototype.countPlayer = function(){
 /* Game launchers */
 Game.prototype.ready = function(){
   var _this = this;
+  // If more than 1 player in the game, launch the countdown
   if(this.countPlayer() > 1)
     this.countdown();
 };
+
 Game.prototype.countdown = function(){
   var _this = this;
   var count = 5;
 
+  // Toggle the ready state, disable multiple countdown launch
   this.stat.ready = true;
 
+  // Launch the countdown
   this.countdownTimer = setInterval(function(){
     if(count < 0){
       clearInterval(_this.countdownTimer);
