@@ -44,7 +44,6 @@ Racer.prototype.create = function(){
   this.physics.arcade.enable(player);
   player.enableBody = true;
   player.body.collideWorldBounds = true;
-  player.refresh = false; // bool if player pos need to be updated
 
   // Player update position
   this.player.data.updatePosition(player.position);
@@ -82,22 +81,17 @@ Racer.prototype.playerUpdate = function(){
   this.player.data.updatePosition(player.position);
 
   // Player direction handler
-  if(this.cursors.up.isDown){
+  if(this.cursors.up.isDown)
     player.body.velocity.y = -400;
-    player.refresh = true;
-  }
-  if(this.cursors.down.isDown){
+
+  if(this.cursors.down.isDown)
     player.body.velocity.y = 400;
-    player.refresh = true;
-  }
-  if(this.cursors.left.isDown){
-    player.refresh = true;
+
+  if(this.cursors.left.isDown)
     player.body.velocity.x = -400
-  }
-  if(this.cursors.right.isDown){
-    player.refresh = true;
+
+  if(this.cursors.right.isDown)
     player.body.velocity.x = 400;
-  }
 };
 
 Racer.prototype.foesUpdate = function(){
