@@ -1,7 +1,6 @@
 module.exports = Player;
 
-function Player(socket, room, game, roomObj){
-  this.roomObj = roomObj; // Room object
+function Player(socket, room, game){
   this.game = game; // Game object
   this.socket = socket; // Socket object
   this.room = room; // Room name

@@ -1,5 +1,4 @@
 var path      = require('path');
-var Player    = require(__root + 'modules/Player.js');
 var Game      = require(__root + 'modules/Game.js');
 
 module.exports = Rooms;
@@ -46,7 +45,7 @@ Rooms.prototype.request = function(socket, name){
 Rooms.prototype.random = function(socket){
   // Refresh room list
   this.refresh();
-  
+
   var i = 0;
   var nbRoom = this.rooms.length - 1;
   var choices = []; // List of available rooms (no full, no being created)
@@ -76,7 +75,7 @@ Rooms.prototype.join = function(socket, name){
   // Join the room
   socket.join(name);
   // Add the new player to the game
-  this.games[name].addPlayer(new Player(socket, name, this.games[name], this));
+  this.games[name].addPlayer(socket);
 };
 /* End join room */
 
@@ -96,7 +95,7 @@ Rooms.prototype.create = function(socket, name){
   // Create a new game in the room
   this.games[name] = new Game(this.ws, name);
   // Add the new player to the game
-  this.games[name].addPlayer(new Player(socket, name, this.games[name], this));
+  this.games[name].addPlayer(socket);
 };
 
 Rooms.prototype.getName = function(){

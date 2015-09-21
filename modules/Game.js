@@ -1,3 +1,5 @@
+var Player    = require(__root + 'modules/Player.js');
+
 module.exports = Game;
 
 function Game(ws, room){
@@ -13,9 +15,9 @@ function Game(ws, room){
 }
 
 /* Player handler */
-Game.prototype.addPlayer = function(player){
+Game.prototype.addPlayer = function(socket){
   // Add player to the list of players
-  this.players[player.name] = player;
+  this.players[socket.id] = new Player(socket, this.room, this);
   // If countdown isn't launch, check for ready state
   if(!this.stat.ready)
     this.ready();
