@@ -32,29 +32,16 @@ Racer.prototype.create = function(){
   this.obstacles.enableBody = true;
 
   // Player creation
-  this.player.el = this.add.sprite(
-    this.centerX, // X
-    this.centerY, // Y
-    this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
-  var player = this.player.el;
-
-  // Player trail
-  this.addTrail(this.player.el, this.player.data.color);
-
-  this.physics.arcade.enable(player);
-  player.enableBody = true;
-  player.body.collideWorldBounds = true;
-  player.refresh = false; // bool if player pos need to be updated
-
-  // Player update position
-  this.player.data.updatePosition(player.position);
+  if(!this.player.data.spectator)
+    this.createPlayer();
 
   // Key binding
   this.cursors = this.input.keyboard.createCursorKeys();
 };
 
 Racer.prototype.update = function(){
-  this.playerUpdate();
+  if(!this.player.data.spectator)
+    this.playerUpdate();
   this.foesUpdate();
 };
 
@@ -64,6 +51,7 @@ Racer.prototype.playerUpdate = function(){
 
   // Player's elements collisions
   this.physics.arcade.collide(this.obstacles, player, function(){
+    _this.player.data.destroy(_this.player.data.name);
     _this.destroyPlayer(_this.player.el, _this.player.data.color);
   });
   if(player.explosion)
@@ -81,22 +69,17 @@ Racer.prototype.playerUpdate = function(){
   this.player.data.updatePosition(player.position);
 
   // Player direction handler
-  if(this.cursors.up.isDown){
+  if(this.cursors.up.isDown)
     player.body.velocity.y = -400;
-    player.refresh = true;
-  }
-  if(this.cursors.down.isDown){
+
+  if(this.cursors.down.isDown)
     player.body.velocity.y = 400;
-    player.refresh = true;
-  }
-  if(this.cursors.left.isDown){
-    player.refresh = true;
+
+  if(this.cursors.left.isDown)
     player.body.velocity.x = -400
-  }
-  if(this.cursors.right.isDown){
-    player.refresh = true;
+
+  if(this.cursors.right.isDown)
     player.body.velocity.x = 400;
-  }
 };
 
 Racer.prototype.foesUpdate = function(){
@@ -107,9 +90,6 @@ Racer.prototype.foesUpdate = function(){
     foe.trail.x = foe.position.x;
     foe.trail.y = foe.position.y + foe.height / 2;
     // Foes collisions
-    this.physics.arcade.collide(this.obstacles, foe, function(){
-      _this.destroyPlayer(foe, foe.color);
-    });
     if(foe.explosion)
       this.physics.arcade.collide(this.obstacles, foe.explosion);
     // if(foe.trail)
@@ -117,44 +97,72 @@ Racer.prototype.foesUpdate = function(){
   }
 };
 
-Racer.prototype.createFoe = function(color, id, pos){
+Racer.prototype.createFoe = function(color, name, alive){
   // Create foe
   var foe = this.foes.create(0, 0, this.playerCreator(this.player.data.size, color));
   // Add trail to foe
   this.addTrail(foe, color);
   // Add name
-  foe.name = id;
+  foe.name = name;
   // Add color
   foe.color = color;
-  // Set pos to 0,0 if foe just arrive
-  if(!pos){
-    foe.position.x = 0;
-    foe.position.y = 0;
-  }
-  // Set foe pos if foe was already in game when player arrive
-  else{
-    foe.position.x = pos.x;
-    foe.position.y = pos.y;
+  // Set pos to 0,0
+  foe.position.x = 0;
+  foe.position.y = 0;
+  // If the foe is dead, kill it right after draw
+  if(!alive){
+    foe.kill();
+    foe.trail.kill();
   }
 };
 
-Racer.prototype.updateFoe = function(pos, id){
+Racer.prototype.updateFoe = function(pos, name){
   // Update foe's position when he's moving
   for(var i = 0; i < this.foes.children.length; i++){
-    if(this.foes.children[i].name == id){
+    if(this.foes.children[i].name == name){
       this.foes.children[i].x = pos.x;
       this.foes.children[i].y = pos.y;
     }
   }
 };
 
-Racer.prototype.destroyFoe = function(id){
+Racer.prototype.destroyFoe = function(name){
   // Destroy foe on disconnect
   for(var i = 0; i < this.foes.children.length; i++){
-    if(this.foes.children[i].name == id){
+    if(this.foes.children[i].name == name){
       this.destroyPlayer(this.foes.children[i], this.foes.children[i].color);
     }
   }
+};
+
+Racer.prototype.resetFoe = function(name){
+  for(var i = 0; i < this.foes.children.length; i++){
+    if(this.foes.children[i].name == name){
+      var foe = this.foes.children[i];
+      foe.reset(0, 0);
+      foe.trail.revive();
+      foe.trail.start(false, 700, 1);
+    }
+  }
+};
+
+Racer.prototype.createPlayer = function(){
+  this.player.el = this.add.sprite(
+    this.centerX, // X
+    this.centerY, // Y
+    this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
+  this.player.data.spectator = false;
+  var player = this.player.el;
+
+  // Player trail
+  this.addTrail(this.player.el, this.player.data.color);
+
+  this.physics.arcade.enable(player);
+  player.enableBody = true;
+  player.body.collideWorldBounds = true;
+
+  // Player update position
+  this.player.data.updatePosition(player.position);
 };
 
 Racer.prototype.playerCreator = function(size, color){
@@ -175,6 +183,16 @@ Racer.prototype.destroyPlayer = function(player, color){
     player.kill();
     player.trail.kill();
   }
+};
+
+Racer.prototype.revivePlayer = function(){
+  this.obstacles.forEachAlive(function(obstacle){
+    obstacle.kill();
+  });
+  var player = this.player.el;
+  player.reset(0, 0);
+  player.trail.revive();
+  player.trail.start(false, 700, 1);
 };
 
 Racer.prototype.createExplosion = function(player, color){

@@ -1,6 +1,7 @@
-function Player(color, id, socket){
-  this.id = id;
+function Player(color, name, spectator, socket){
+  this.name = name;
   this.socket = socket;
+  this.spectator = spectator;
   this.color = color;
   this.size = {
     height: 20,
@@ -17,18 +18,32 @@ Player.prototype.updatePosition = function(position){
   this.socket.emit('setPos', position);
 };
 
+Player.prototype.destroy = function(name){
+  this.socket.emit('destroy', name);
+};
+
 Player.prototype.socketHandler = function(){
   var _this = this;
 
+  this.socket.on('revive', function(){
+    _this.game.revivePlayer();
+  });
+  this.socket.on('createPlayer', function(){
+    _this.game.createPlayer();
+  });
+
   // Foes handler
   this.socket.on('newPlayer', function(data){
-    _this.game.createFoe(data.color, data.id);
+    _this.game.createFoe(data.color, data.name, data.alive);
+  });
+  this.socket.on('reset', function(name){
+    _this.game.resetFoe(name);
   });
   this.socket.on('givePos', function(data){
-    _this.game.updateFoe(data.pos, data.id);
+    _this.game.updateFoe(data.pos, data.name);
   });
-  this.socket.on('destroy', function(id){
-    _this.game.destroyFoe(id);
+  this.socket.on('destroy', function(name){
+    _this.game.destroyFoe(name);
   });
 
   // Obstacles handler
