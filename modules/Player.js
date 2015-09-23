@@ -13,11 +13,17 @@ function Player(socket, room, game){
     y: 0
   };
   this.alive = true;
-  this.playing = false; // Player can play or spectate if game is in progress
+  this.spectator = false; // Player can play or spectate if game is in progress
   this.socketHandler();
 
-  if(!this.game.stat.start)
+  if(!this.game.stat.start){
+    this.spectator = false;
     this.createPlayer();
+  }
+  else{
+    this.spectator = true;
+    this.createPlayer();
+  }
 }
 
 Player.prototype.socketHandler = function(){
@@ -44,7 +50,7 @@ Player.prototype.socketHandler = function(){
   this.socket.on('disconnect', function(){
     console.log('socket :'+_this.name+' left');
     // If player is alive and is playing make the destroy animation
-    if(_this.playing && _this.alive)
+    if(!_this.spectator && _this.alive)
       _this.socket.broadcast.to(_this.room).emit('destroy', _this.name);
     // Remove player from player list in game object
     _this.game.deletePlayer(_this.name);
@@ -55,19 +61,25 @@ Player.prototype.createPlayer = function(){
   var _this = this;
   // Initiate player
   // Handshake allowing to initiate player appearance
-  this.socket.emit('handshake', {'color': this.color, 'name': this.name});
+  this.socket.emit('handshake', {'color': this.color, 'name': this.name, 'spectator': this.spectator});
   // Handshake allowing to draw player and his opponents
   this.socket.on('handshake', function(){
     _this.playing = true;
     // Draw the new player for his opponents
-    _this.socket.broadcast.to(_this.room).emit('newPlayer', {'color': _this.color, 'name': _this.name});
+    if(!_this.spectator)
+      _this.socket.broadcast.to(_this.room).emit('newPlayer', {'color': _this.color, 'name': _this.name, 'alive': _this.alive});
     // Draw opponents for the new player
     for(var player in _this.players){
       if(_this.players[player].name != _this.name){
-        _this.socket.emit('newPlayer', {'color': _this.players[player].color, 'name': _this.players[player].name});
+        _this.socket.emit('newPlayer', {'color': _this.players[player].color, 'name': _this.players[player].name, 'alive': _this.players[player].alive});
       }
     }
   });
+};
+
+Player.prototype.createSpectator = function(){
+  this.spectator = false;
+  this.socket.broadcast.to(this.room).emit('newPlayer', {'color': this.color, 'name': this.name});
 };
 
 Player.prototype.setColor = function(){

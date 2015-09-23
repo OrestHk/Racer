@@ -1,6 +1,7 @@
-function Player(color, name, socket){
+function Player(color, name, spectator, socket){
   this.name = name;
   this.socket = socket;
+  this.spectator = spectator;
   this.color = color;
   this.size = {
     height: 20,
@@ -26,7 +27,7 @@ Player.prototype.socketHandler = function(){
 
   // Foes handler
   this.socket.on('newPlayer', function(data){
-    _this.game.createFoe(data.color, data.name);
+    _this.game.createFoe(data.color, data.name, data.alive);
   });
   this.socket.on('givePos', function(data){
     _this.game.updateFoe(data.pos, data.name);

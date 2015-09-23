@@ -32,28 +32,16 @@ Racer.prototype.create = function(){
   this.obstacles.enableBody = true;
 
   // Player creation
-  this.player.el = this.add.sprite(
-    this.centerX, // X
-    this.centerY, // Y
-    this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
-  var player = this.player.el;
-
-  // Player trail
-  this.addTrail(this.player.el, this.player.data.color);
-
-  this.physics.arcade.enable(player);
-  player.enableBody = true;
-  player.body.collideWorldBounds = true;
-
-  // Player update position
-  this.player.data.updatePosition(player.position);
+  if(!this.player.data.spectator)
+    this.createPlayer();
 
   // Key binding
   this.cursors = this.input.keyboard.createCursorKeys();
 };
 
 Racer.prototype.update = function(){
-  this.playerUpdate();
+  if(!this.player.data.spectator)
+    this.playerUpdate();
   this.foesUpdate();
 };
 
@@ -109,7 +97,7 @@ Racer.prototype.foesUpdate = function(){
   }
 };
 
-Racer.prototype.createFoe = function(color, name, pos){
+Racer.prototype.createFoe = function(color, name, alive){
   // Create foe
   var foe = this.foes.create(0, 0, this.playerCreator(this.player.data.size, color));
   // Add trail to foe
@@ -118,15 +106,13 @@ Racer.prototype.createFoe = function(color, name, pos){
   foe.name = name;
   // Add color
   foe.color = color;
-  // Set pos to 0,0 if foe just arrive
-  if(!pos){
-    foe.position.x = 0;
-    foe.position.y = 0;
-  }
-  // Set foe pos if foe was already in game when player arrive
-  else{
-    foe.position.x = pos.x;
-    foe.position.y = pos.y;
+  // Set pos to 0,0
+  foe.position.x = 0;
+  foe.position.y = 0;
+  // If the foe is dead, kill it right after draw
+  if(!alive){
+    foe.kill();
+    foe.trail.kill();
   }
 };
 
@@ -147,6 +133,24 @@ Racer.prototype.destroyFoe = function(name){
       this.destroyPlayer(this.foes.children[i], this.foes.children[i].color);
     }
   }
+};
+
+Racer.prototype.createPlayer = function(){
+  this.player.el = this.add.sprite(
+    this.centerX, // X
+    this.centerY, // Y
+    this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
+  var player = this.player.el;
+
+  // Player trail
+  this.addTrail(this.player.el, this.player.data.color);
+
+  this.physics.arcade.enable(player);
+  player.enableBody = true;
+  player.body.collideWorldBounds = true;
+
+  // Player update position
+  this.player.data.updatePosition(player.position);
 };
 
 Racer.prototype.playerCreator = function(size, color){

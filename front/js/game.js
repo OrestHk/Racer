@@ -23,7 +23,7 @@ function initGame(){
   // Socket handshake with server
   socket.on('handshake', function(data){
     // Player creation
-    player = new Player(data.color, data.name, socket);
+    player = new Player(data.color, data.name, data.spectator, socket);
     // Game creation
     game = new Phaser.Game(800, 500, Phaser.AUTO, 'racer');
     // Transfer game creation to custom object
