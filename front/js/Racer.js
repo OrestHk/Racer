@@ -135,11 +135,23 @@ Racer.prototype.destroyFoe = function(name){
   }
 };
 
+Racer.prototype.resetFoe = function(name){
+  for(var i = 0; i < this.foes.children.length; i++){
+    if(this.foes.children[i].name == name){
+      var foe = this.foes.children[i];
+      foe.reset(0, 0);
+      foe.trail.revive();
+      foe.trail.start(false, 700, 1);
+    }
+  }
+};
+
 Racer.prototype.createPlayer = function(){
   this.player.el = this.add.sprite(
     this.centerX, // X
     this.centerY, // Y
     this.playerCreator(this.player.data.size, this.player.data.color)); // BitmapModelCreator
+  this.player.data.spectator = false;
   var player = this.player.el;
 
   // Player trail
@@ -169,6 +181,16 @@ Racer.prototype.destroyPlayer = function(player, color){
   this.createExplosion(player, color);
   player.kill();
   player.trail.kill();
+};
+
+Racer.prototype.revivePlayer = function(){
+  this.obstacles.forEachAlive(function(obstacle){
+    obstacle.kill();
+  });
+  var player = this.player.el;
+  player.reset(0, 0);
+  player.trail.revive();
+  player.trail.start(false, 700, 1);
 };
 
 Racer.prototype.createExplosion = function(player, color){

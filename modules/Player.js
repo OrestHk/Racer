@@ -44,6 +44,7 @@ Player.prototype.socketHandler = function(){
   this.socket.on('destroy', function(name){
     _this.alive = false;
     _this.socket.broadcast.to(_this.room).emit('destroy', name);
+    _this.game.gameOver();
   });
 
   // Player disconnection
@@ -77,9 +78,24 @@ Player.prototype.createPlayer = function(){
   });
 };
 
+Player.prototype.reset = function(){
+  if(this.spectator)
+    this.createSpectator();
+  this.position.x = 0;
+  this.position.y = 0;
+  this.alive = true;
+  this.socket.emit('revive');
+  this.socket.broadcast.to(this.room).emit('reset', this.name);
+  for(var player in this.players){
+    if(this.players[player].name != this.name)
+      this.socket.emit('reset', this.name);
+  }
+};
+
 Player.prototype.createSpectator = function(){
   this.spectator = false;
-  this.socket.broadcast.to(this.room).emit('newPlayer', {'color': this.color, 'name': this.name});
+  this.socket.emit('createPlayer');
+  this.socket.broadcast.to(this.room).emit('newPlayer', {'color': this.color, 'name': this.name, 'alive': false});
 };
 
 Player.prototype.setColor = function(){

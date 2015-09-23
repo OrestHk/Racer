@@ -66,6 +66,41 @@ Game.prototype.countdown = function(){
 };
 /* End game launchers */
 
+/* Game over */
+Game.prototype.gameOver = function(){
+  var player, count = 0, dead = 0;
+  // Count dead players
+  for(player in this.players){
+    if(!this.players[player].spectator){
+      count++;
+      if(!this.players[player].alive)
+        dead++;
+    }
+  }
+
+  // If more than 2 are dead, restart game
+  if(dead > count - 2)
+    this.restart();
+
+};
+/* End game over */
+
+/* Restart game */
+Game.prototype.restart = function(){
+  var player;
+  // Reset all players
+  for(player in this.players){
+    this.players[player].reset();
+  }
+
+  clearInterval(this.countdownTimer);
+  clearTimeout(this.obstacle);
+  this.stat.start = false;
+  this.stat.ready = false;
+  this.ready();
+};
+/* End restart game */
+
 /* Obstale handler */
 Game.prototype.sendObstacle = function(){
   var _this = this;

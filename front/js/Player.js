@@ -25,9 +25,19 @@ Player.prototype.destroy = function(name){
 Player.prototype.socketHandler = function(){
   var _this = this;
 
+  this.socket.on('revive', function(){
+    _this.game.revivePlayer();
+  });
+  this.socket.on('createPlayer', function(){
+    _this.game.createPlayer();
+  });
+
   // Foes handler
   this.socket.on('newPlayer', function(data){
     _this.game.createFoe(data.color, data.name, data.alive);
+  });
+  this.socket.on('reset', function(name){
+    _this.game.resetFoe(name);
   });
   this.socket.on('givePos', function(data){
     _this.game.updateFoe(data.pos, data.name);
